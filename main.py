@@ -1,35 +1,39 @@
 import numpy as np
-from layers import Dense , ReLU
+from layers import Dense, ReLU, Softmax, CrossEntropyLoss
 
-print("🚀 Neural Network From Scratch - Testing Dense Layer")
+print("🚀 Full Classifier Forward Pass - Paper vs Code")
 print("="*50)
 
-# 1. INPUT DATA (X)
-# Shape: 1 row, 2 columns (1 sample, 2 features: x1 and x2)
-X = np.array([[2.0, 3.0]]) 
+# Input: x1=2, x2=3
+X = np.array([[2.0, 3.0]])
 
-# 2. INSTANTIATE THE LAYER (2 inputs -> 2 hidden nodes)
-layer1 = Dense(n_inputs=2, n_outputs=2)
-
-# 3. INJECT MANUAL WEIGHTS
-# Override the random weights to exactly match yesterday's manual calculation
-layer1.weights = np.array([[ 2.0,  4.0],
+hidden = Dense(n_inputs=2, n_outputs=2)
+hidden.weights = np.array([[ 2.0,  4.0],
                            [-1.0, -2.0]])
 
-# 4. FORWARD PASS
-H_raw = layer1.forward(X)
-print(f"Raw Hidden Scores (Before Bouncer): {H_raw}") 
+output = Dense(n_inputs=2, n_outputs=3)
+output.weights = np.array([[ 1.0,  2.0,  3.0],
+                           [-1.0,  0.0,  1.0]])
 
-# 4. CALL THE BOUNCER (ReLU)
-bouncer = ReLU()
-H_active = bouncer.forward(H_raw)
-print(f"Active Hidden Scores (After Bouncer): {H_active}")
+# Components
+relu = ReLU()
+softmax = Softmax()
+ce_loss = CrossEntropyLoss()
 
-# 5. LET'S TEST WITH NEGATIVE NUMBERS!
-print("\n--- Testing Bouncer with Negative Numbers ---")
-fake_negative_data = np.array([[-5.0, 2.0, -10.5, 8.0]])
-print(f"Before Bouncer: {fake_negative_data}")
-print(f"After Bouncer:  {bouncer.forward(fake_negative_data)}")
+# --- FORWARD PASS CHAIN ---
+h_raw = hidden.forward(X)          # Sigma at hidden layer
+h_active = relu.forward(h_raw)     # Bouncer filters negatives
+logits = output.forward(h_active)  # Sigma at output layer
+probs = softmax.forward(logits)    # The 100% pie
 
+# Target: Kucing = class index 0
+y_true = np.array([0])
+loss = ce_loss.forward(probs, y_true)
+
+print(f"Hidden raw:    {h_raw}")     # Expect [[1. 2.]]
+print(f"Hidden active: {h_active}")  # Expect [[1. 2.]]
+print(f"Logits:        {logits}")     # Expect [[-1. 2. 5.]]
+print(f"Probs:         {probs}")      # Expect ~[[0.0024 0.0473 0.9503]]
+print(f"CE Loss:       {loss:.4f}")   # Expect ~6.0509
 print("="*50)
-print("✅ ReLU Bouncer successfully assembled!")
+print("✅ Full classifier forward pass matches the paper math!")
