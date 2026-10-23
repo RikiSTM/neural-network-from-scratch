@@ -37,3 +37,9 @@ print(f"Probs:         {probs}")      # Expect ~[[0.0024 0.0473 0.9503]]
 print(f"CE Loss:       {loss:.4f}")   # Expect ~6.0509
 print("="*50)
 print("✅ Full classifier forward pass matches the paper math!")
+
+# --- BACKWARD PASS START ---
+print("\n--- 🧠 BACKWARD PASS: THE GRADIENT ---")
+d_logits = ce_loss.backward()
+print(f"Gradient to Logits: {d_logits}") 
+# Expect roughly: [[-0.9976,  0.0473,  0.9503]]

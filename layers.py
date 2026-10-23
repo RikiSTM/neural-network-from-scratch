@@ -34,6 +34,7 @@ class Softmax:
     distribution that sums to 1.0 (the 100% pie).
     """
     def forward(self, X):
+
         # Subtract the row max for numerical stability.
         # Why? e^1000 overflows float64 into 'inf'. Subtracting max
         # shifts scores down WITHOUT changing the final probabilities.
@@ -47,9 +48,28 @@ class CrossEntropyLoss:
     based on how confidently it was wrong about the true class.
     """
     def forward(self, probs, y_true):
+        
+        # Save state for the backward pass
+        self.probs = probs
+        self.y_true = y_true
         # Clip to avoid log(0) = -inf, which poisons training with NaN.
         probs_clipped = np.clip(probs, 1e-12, 1.0)
         # Grab the probability assigned to the TRUE class of each sample.
         correct_probs = probs_clipped[np.arange(len(y_true)), y_true]
         # Loss = mean negative log-likelihood.
         return np.mean(-np.log(correct_probs))
+    
+    def backward(self):
+        """
+        Computes the gradient of the loss w.r.t the logits (pre-softmax).
+        The magical combined derivative of Softmax + CE is simply: probs - one_hot.
+        """
+        # Create a copy of probs so we don't mutate the original array
+        grad = np.copy(self.probs)
+        
+        # Subtract 1 from the probability of the TRUE class (One-Hot subtraction)
+        grad[np.arange(len(self.y_true)), self.y_true] -= 1
+        
+        # Divide by batch size because the forward pass used np.mean()
+        return grad / len(self.y_true)
+    
