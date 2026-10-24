@@ -11,10 +11,27 @@ class Dense:
         self.weights = np.random.randn(n_inputs, n_outputs)
 
     def forward(self, X):
-        # X = input data matrix (batch_size, n_inputs)
-        # self.weights = weight matrix (n_inputs, n_outputs)
+        # Save the input for the backward pass (the notebook pattern)
+        self.last_input = X
         # np.dot performs matrix multiplication (equivalent to manual Sigma sum)
         return np.dot(X, self.weights)
+
+    def backward(self, grad_output):
+        """
+        grad_output: complaint from downstream (gradient w.r.t this layer's output).
+        Returns: complaint to pass upstream (gradient w.r.t this layer's input).
+        """
+        # Blame per weight = upstream activity × downstream complaint
+        self.grad_weights = np.dot(self.last_input.T, grad_output)
+        # Redistribute downstream complaints back upstream through transposed pipes
+        return np.dot(grad_output, self.weights.T)
+    
+    def update_params(self, learning_rate):
+        """
+        Apply Gradient Descent: adjust weights in the opposite direction of the gradient.
+        W_new = W_old - (lr * grad)
+        """
+        self.weights -= learning_rate * self.grad_weights
     
 
 class ReLU:
@@ -23,10 +40,14 @@ class ReLU:
     Acts as a bouncer: passes positive values, blocks (zeros) negative values.
     """
     def forward(self, X):
-        # np.maximum compares X and 0 element-wise, returning the larger value.
-        # This elegantly replaces all negative numbers with 0 without slow for-loops.
-        # Example: np.maximum([-5, 2], 0) -> [0, 2]
+        # Save the input mask for backward: remember who got kicked out
+        self.last_input = X
         return np.maximum(0, X)
+
+    def backward(self, grad_output):
+        # Gate the gradient: flows only where the forward input was positive.
+        # (last_input > 0) builds a mask of 1s (passed) and 0s (blocked).
+        return grad_output * (self.last_input > 0)
     
 class Softmax:
     """
