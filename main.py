@@ -1,5 +1,5 @@
 import numpy as np
-from layers import Dense, ReLU, Softmax, CrossEntropyLoss
+from layers import Dense, LeakyReLU, Softmax, CrossEntropyLoss
 
 print("🚀 NEURAL NETWORK TRAINING FROM SCRATCH")
 print("="*50)
@@ -17,7 +17,7 @@ output = Dense(n_inputs=2, n_outputs=3)
 output.weights = np.array([[ 1.0,  2.0,  3.0],
                            [-1.0,  0.0,  1.0]])
 
-relu = ReLU()
+relu = LeakyReLU()
 softmax = Softmax()
 ce_loss = CrossEntropyLoss()
 
