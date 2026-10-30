@@ -1,5 +1,6 @@
 import numpy as np
 from layers import Dense, LeakyReLU, Softmax, CrossEntropyLoss
+from optimizers import Adam 
 
 print("🚀 NEURAL NETWORK TRAINING FROM SCRATCH")
 print("="*50)
@@ -24,6 +25,11 @@ ce_loss = CrossEntropyLoss()
 # 3. HYPERPARAMETERS
 learning_rate = 0.1
 epochs = 100  # Number of training iterations
+# NEW: Initialize Adam. Notice the learning rate is usually much smaller (0.001) 
+# because Adam is powerful and doesn't need giant steps!
+optimizer = Adam(learning_rate=0.01) 
+epochs = 100  
+
 
 # 4. THE TRAINING LOOP (Where the magic happens)
 for epoch in range(epochs):
@@ -41,8 +47,11 @@ for epoch in range(epochs):
     hidden.backward(d_hidden_raw) # This populates hidden.grad_weights
 
     # --- UPDATE WEIGHTS (Apply Gradient Descent) ---
-    output.update_params(learning_rate)
-    hidden.update_params(learning_rate)
+    #output.update_params(learning_rate)
+    #hidden.update_params(learning_rate)
+    # NEW: Let Adam handle the Gradient Descent step!
+    optimizer.step(output)
+    optimizer.step(hidden)
 
     # --- PRINT PROGRESS ---
     if epoch % 10 == 0 or epoch == epochs - 1:
