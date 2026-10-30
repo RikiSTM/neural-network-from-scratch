@@ -1,6 +1,6 @@
 import numpy as np
 from layers import Dense, LeakyReLU, Softmax, CrossEntropyLoss
-from optimizers import Adam 
+from optimizers import AdamW
 
 print("🚀 NEURAL NETWORK TRAINING FROM SCRATCH")
 print("="*50)
@@ -27,7 +27,7 @@ learning_rate = 0.1
 epochs = 100  # Number of training iterations
 # NEW: Initialize Adam. Notice the learning rate is usually much smaller (0.001) 
 # because Adam is powerful and doesn't need giant steps!
-optimizer = Adam(learning_rate=0.01) 
+optimizer = AdamW(learning_rate=0.2, weight_decay=0.1) 
 epochs = 100  
 
 
