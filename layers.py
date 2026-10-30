@@ -93,4 +93,50 @@ class CrossEntropyLoss:
         
         # Divide by batch size because the forward pass used np.mean()
         return grad / len(self.y_true)
+
+class Dropout:
+    """
+    Dropout Regularization: Randomly 'kills' neurons during training 
+    to prevent the network from becoming over-reliant on specific neurons.
+    """
     
+    def __init__(self, keep_prob=0.8):
+        """
+        keep_prob: probability that a neuron is KEPT (not dropped).
+        0.8 means 80% survive, 20% are killed.
+        """
+        self.keep_prob = keep_prob
+        self.mask = None
+
+    def forward(self, X, training=True):
+        """
+        Forward pass with dropout.
+        
+        During training: randomly drop neurons and scale up survivors.
+        During evaluation/testing: no dropout applied.
+        """
+        if not training:
+            return X
+        
+        # Create random mask: 1 = neuron survives, 0 = neuron killed
+        self.mask = (np.random.rand(*X.shape) < self.keep_prob).astype(float)
+        
+        # Apply mask (killed neurons become 0)
+        X_dropped = X * self.mask
+        
+        # Scale up survivors to maintain expected value (Inverted Dropout)
+        return X_dropped / self.keep_prob
+
+    def backward(self, grad_output):
+        """
+        Backward pass with dropout.
+        
+        Gradient only flows through neurons that survived.
+        Killed neurons receive zero gradient.
+        """
+        # Safety check: if mask is None (eval mode), pass gradient through
+        if self.mask is None:
+            return grad_output
+            
+        # Apply mask to gradient (killed neurons get 0 gradient)
+        return grad_output * self.mask / self.keep_prob

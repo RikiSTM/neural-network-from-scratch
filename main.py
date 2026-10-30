@@ -1,5 +1,5 @@
 import numpy as np
-from layers import Dense, LeakyReLU, Softmax, CrossEntropyLoss
+from layers import Dense, LeakyReLU, Softmax, CrossEntropyLoss, Dropout
 from optimizers import AdamW
 
 print("🚀 NEURAL NETWORK TRAINING FROM SCRATCH")
@@ -19,6 +19,7 @@ output.weights = np.array([[ 1.0,  2.0,  3.0],
                            [-1.0,  0.0,  1.0]])
 
 relu = LeakyReLU()
+dropout = Dropout(keep_prob=0.8)
 softmax = Softmax()
 ce_loss = CrossEntropyLoss()
 
@@ -27,8 +28,9 @@ learning_rate = 0.1
 epochs = 100  # Number of training iterations
 # NEW: Initialize Adam. Notice the learning rate is usually much smaller (0.001) 
 # because Adam is powerful and doesn't need giant steps!
-optimizer = AdamW(learning_rate=0.2, weight_decay=0.1) 
+optimizer = AdamW(learning_rate=0.05, weight_decay=0.05) 
 epochs = 100  
+is_training = True 
 
 
 # 4. THE TRAINING LOOP (Where the magic happens)
@@ -36,14 +38,20 @@ for epoch in range(epochs):
     # --- FORWARD PASS (Prediction) ---
     h_raw = hidden.forward(X)
     h_active = relu.forward(h_raw)
+    
+    h_drop = dropout.forward(h_active, training=is_training) 
+    
     logits = output.forward(h_active)
     probs = softmax.forward(logits)
     loss = ce_loss.forward(probs, y_true)
 
     # --- BACKWARD PASS (Compute gradients) ---
     d_logits = ce_loss.backward()
-    d_hidden = output.backward(d_logits)
-    d_hidden_raw = relu.backward(d_hidden)
+    d_hidden_active = output.backward(d_logits)
+    
+    d_hidden_drop = dropout.backward(d_hidden_active) 
+    
+    d_hidden_raw = relu.backward(d_hidden_drop)
     hidden.backward(d_hidden_raw) # This populates hidden.grad_weights
 
     # --- UPDATE WEIGHTS (Apply Gradient Descent) ---
@@ -57,7 +65,12 @@ for epoch in range(epochs):
     if epoch % 10 == 0 or epoch == epochs - 1:
         pred_class = np.argmax(probs)
         classes = ["Cat", "Dog", "Bird"]
+        dropout_status = "ON" if is_training else "OFF (Full)"
         print(f"Epoch {epoch:3d} | Loss: {loss:.4f} | Prediction: {classes[pred_class]} (Probs: {np.round(probs, 4)})")
+        
+        print(f"\n🔎 FINAL INFERENCE (Dropout: {dropout_status} | training={is_training})")
+        print(f"Prediction: {classes[pred_class]} | Probs: {np.round(probs, 4)}")
+        
 
 print("="*50)
 print("✅ Training Complete! The network has learned.")
